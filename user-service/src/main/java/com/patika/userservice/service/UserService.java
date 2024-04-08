@@ -3,7 +3,6 @@ package com.patika.userservice.service;
 //import com.patika.userservice.dto.NotificationDTO;
 import com.patika.userservice.dto.UserDTO;
 import com.patika.userservice.dto.converter.UserDTOConverter;
-import com.patika.userservice.entity.Address;
 import com.patika.userservice.entity.User;
 //import com.patika.userservice.enums.NotificationType;
 import com.patika.userservice.exception.ExceptionMessages;
@@ -20,7 +19,6 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-//@Scope(value = "singleton")
 @Slf4j
 public class UserService implements IUserService {
 
@@ -50,14 +48,6 @@ public class UserService implements IUserService {
             throw new ResourceAlreadyExistException(ExceptionMessages.ALREADY_EXIST + " with email " + email);
     }
 
-    private Address getAddress() {
-        Address address = new Address();
-        address.setAddressTitle("Home");
-        address.setAddressDescription("izmir");
-        address.setProvince("izmir");
-        return address;
-    }
-
     /*
     private NotificationDTO prepareNotificationDTO(NotificationType notificationType, String email) {
         return NotificationDTO.builder()
@@ -75,7 +65,7 @@ public class UserService implements IUserService {
                 .toList();
     }
 
-    @Cacheable(value = "users", key = "#email")
+    //@Cacheable(value = "users", key = "#email")
     @Override
     public UserDTO getUserByEmail(String email) {
         return UserDTOConverter.userToUserDTO(findUserByEmail(email));
