@@ -23,7 +23,7 @@ public class ApplicationController {
     }
 
     @PostMapping
-    public ApplicationResponse createApplication(@RequestBody ApplicationRequest request) {
+    public ApplicationResponse createApplication(@Valid @RequestBody ApplicationRequest request) {
         return applicationService.createApplication(request);
     }
 
@@ -32,9 +32,14 @@ public class ApplicationController {
         return ResponseEntity.ok(applicationService.getAll());
     }
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<ApplicationResponse> getApplicationById(@PathVariable Long userId) {
-        return ResponseEntity.ok().body(applicationService.getApplicationById(userId));
+    @GetMapping("/{id}")
+    public ResponseEntity<ApplicationResponse> getApplicationById(@PathVariable Long id) {
+        return ResponseEntity.ok().body(applicationService.getApplicationById(id));
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<ApplicationResponse>> getApplicationsByUserId(@PathVariable Long userId) {
+        return ResponseEntity.ok().body(applicationService.getApplicationsByIdUserId(userId));
     }
 
     @PutMapping
@@ -42,9 +47,9 @@ public class ApplicationController {
         return ResponseEntity.ok().body(applicationService.updateApplication(application));
     }
 
-    @DeleteMapping("/{userId}")
-    public ResponseEntity<ControllerResponseDTO> deleteApplication(@PathVariable Long userId) {
-        applicationService.deleteApplicationById(userId);
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ControllerResponseDTO> deleteApplication(@PathVariable Long id) {
+        applicationService.deleteApplicationById(id);
         return ResponseEntity.ok().body(new ControllerResponseDTO(HttpStatus.OK, "Application deleted"));
     }
 

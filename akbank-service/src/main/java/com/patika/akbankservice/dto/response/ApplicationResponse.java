@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 @Builder
 public class ApplicationResponse {
 
+    private Long id;
     private Long userId;
     private LocalDateTime createDate;
     private ApplicationStatus applicationStatus;

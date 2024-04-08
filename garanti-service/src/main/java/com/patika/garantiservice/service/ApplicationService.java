@@ -36,15 +36,29 @@ public class ApplicationService {
                 .toList();
     }
 
-    public ApplicationResponse getApplicationByUserId(Long id) {
-        return applicationConverter.toResponse(findApplicationById(id));
+    public List<ApplicationResponse> getApplicationsByIdUserId(Long userId) {
+        if(checkUserRecordExists(userId)) throw new RuntimeException("User record not found with id: " + userId);
+
+        return repository.findAllByUserId(userId).stream()
+                .map(applicationConverter::toResponse)
+                .toList();
+    }
+
+    public ApplicationResponse getApplicationById(Long id) {
+        Application application = findApplicationById(id);
+
+        log.info("Application found with id: {}", id);
+        return applicationConverter.toResponse(application);
     }
 
     private Application findApplicationById(Long id) {
-        log.info("Search id : {}", id);
-        return repository.findByUserId(id).orElseThrow(
+        return repository.findById(id).orElseThrow(
                 () -> new RuntimeException("User not found with id " + id)
         );
+    }
+
+    private boolean checkUserRecordExists(Long userId) {
+        return repository.findAllByUserId(userId).isEmpty();
     }
 
     @Transactional

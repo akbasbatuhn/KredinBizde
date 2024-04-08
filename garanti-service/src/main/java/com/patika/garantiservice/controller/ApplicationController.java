@@ -5,6 +5,7 @@ import com.patika.garantiservice.dto.request.ApplicationRequest;
 import com.patika.garantiservice.dto.response.ApplicationResponse;
 import com.patika.garantiservice.entity.Application;
 import com.patika.garantiservice.service.ApplicationService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +23,7 @@ public class ApplicationController {
     }
 
     @PostMapping
-    public ApplicationResponse createApplication(@RequestBody ApplicationRequest request) {
+    public ApplicationResponse createApplication(@Valid @RequestBody ApplicationRequest request) {
         return applicationService.createApplication(request);
     }
 
@@ -31,9 +32,14 @@ public class ApplicationController {
         return ResponseEntity.ok(applicationService.getAll());
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<ApplicationResponse> getApplicationById(@PathVariable Long id) {
+        return ResponseEntity.ok().body(applicationService.getApplicationById(id));
+    }
+
     @GetMapping("/user/{userId}")
-    public ResponseEntity<ApplicationResponse> getApplicationByUserId(@PathVariable Long userId) {
-        return ResponseEntity.ok().body(applicationService.getApplicationByUserId(userId));
+    public ResponseEntity<List<ApplicationResponse>> getApplicationByUserId(@PathVariable Long userId) {
+        return ResponseEntity.ok().body(applicationService.getApplicationsByIdUserId(userId));
     }
 
     @PutMapping
@@ -41,9 +47,9 @@ public class ApplicationController {
         return ResponseEntity.ok().body(applicationService.updateApplication(application));
     }
 
-    @DeleteMapping("/user/{userId}")
-    public ResponseEntity<ControllerResponseDTO> deleteApplicationByUserId(@PathVariable Long userId) {
-        applicationService.deleteApplicationById(userId);
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ControllerResponseDTO> deleteApplicationByUserId(@PathVariable Long id) {
+        applicationService.deleteApplicationById(id);
         return ResponseEntity.ok().body(new ControllerResponseDTO(HttpStatus.OK, "Application deleted"));
     }
 
