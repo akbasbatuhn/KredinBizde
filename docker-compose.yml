@@ -2,9 +2,18 @@ services:
 
   akbank-postgres:
     image: postgres
-    restart: always
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: password
+      POSTGRES_DB: akbank
     ports:
-      - 5432:5432
+      - "5432:5432"
+
+  garanti-postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: garanti
+    ports:
+      - "5433:5432"
