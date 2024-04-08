@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -62,7 +61,7 @@ class AddressServiceTest extends TestSupport {
     }
 
     @Test
-    void testGetAllAirport_whenAirportsExist_shouldReturnListOfAirportDTOs() {
+    void testGetAllAddress_whenAddressesExist_shouldReturnListOfAddresses() {
         when(addressRepository.findAll()).thenReturn(Arrays.asList(addressObj, updatedAddressObj));
 
         List<Address> addressList = addressService.getAllAddresses();
