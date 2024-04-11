@@ -37,14 +37,9 @@ public class ApplicationController {
         return ResponseEntity.ok().body(applicationService.getApplicationById(id));
     }
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<ApplicationResponse>> getApplicationsByUserId(@PathVariable Long userId) {
-        return ResponseEntity.ok().body(applicationService.getApplicationsByIdUserId(userId));
-    }
-
-    @PutMapping
-    public ResponseEntity<ApplicationResponse> updateApplication(@RequestBody Application application) {
-        return ResponseEntity.ok().body(applicationService.updateApplication(application));
+    @PutMapping("/{id}")
+    public ResponseEntity<ApplicationResponse> updateApplication(@PathVariable Long id, @RequestBody ApplicationRequest request) {
+        return ResponseEntity.ok().body(applicationService.updateApplication(id, request));
     }
 
     @DeleteMapping("/{id}")
