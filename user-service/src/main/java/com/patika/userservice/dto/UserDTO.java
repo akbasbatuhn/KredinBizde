@@ -1,5 +1,7 @@
 package com.patika.userservice.dto;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,6 +18,7 @@ import java.time.LocalDate;
 @Document
 public class UserDTO {
 
+    @JsonSerialize(using = ToStringSerializer.class)
     private ObjectId id;
     private String name;
     private String surname;
