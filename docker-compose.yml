@@ -27,6 +27,15 @@ services:
     ports:
       - "5434:5432"
 
+  application-db:
+    image: postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: application
+    ports:
+      - "5435:5432"
+
   user-db:
     image: mongo
     restart: always
