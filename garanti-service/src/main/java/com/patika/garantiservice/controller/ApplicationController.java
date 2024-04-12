@@ -3,7 +3,6 @@ package com.patika.garantiservice.controller;
 import com.patika.garantiservice.dto.ControllerResponseDTO;
 import com.patika.garantiservice.dto.request.ApplicationRequest;
 import com.patika.garantiservice.dto.response.ApplicationResponse;
-import com.patika.garantiservice.entity.Application;
 import com.patika.garantiservice.service.ApplicationService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -37,14 +36,9 @@ public class ApplicationController {
         return ResponseEntity.ok().body(applicationService.getApplicationById(id));
     }
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<ApplicationResponse>> getApplicationByUserId(@PathVariable Long userId) {
-        return ResponseEntity.ok().body(applicationService.getApplicationsByIdUserId(userId));
-    }
-
-    @PutMapping
-    public ResponseEntity<ApplicationResponse> updateApplication(@RequestBody Application application) {
-        return ResponseEntity.ok().body(applicationService.updateApplication(application));
+    @PutMapping("/{id}")
+    public ResponseEntity<ApplicationResponse> updateApplication(@PathVariable Long id, @RequestBody ApplicationRequest request) {
+        return ResponseEntity.ok().body(applicationService.updateApplication(id, request));
     }
 
     @DeleteMapping("/{id}")

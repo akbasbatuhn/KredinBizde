@@ -1,11 +1,12 @@
 package com.patika.garantiservice.dto.request;
 
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+
+import java.math.BigDecimal;
 
 @Getter
 @Setter
@@ -14,6 +15,7 @@ import lombok.ToString;
 @ToString
 public class ApplicationRequest {
 
-    @NotNull(message = "userId field can't be null")
-    private Long userId;
+    private Long loanId;
+    private BigDecimal amount;
+    private int installment;
 }

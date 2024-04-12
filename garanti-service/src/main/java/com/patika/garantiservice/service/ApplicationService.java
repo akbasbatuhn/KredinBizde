@@ -4,6 +4,7 @@ import com.patika.garantiservice.converter.ApplicationConverter;
 import com.patika.garantiservice.dto.request.ApplicationRequest;
 import com.patika.garantiservice.dto.response.ApplicationResponse;
 import com.patika.garantiservice.entity.Application;
+import com.patika.garantiservice.entity.Loan;
 import com.patika.garantiservice.repository.ApplicationRepository;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -19,29 +20,28 @@ public class ApplicationService {
 
     private final ApplicationConverter applicationConverter;
 
-    public ApplicationService(ApplicationRepository repository, ApplicationConverter applicationConverter) {
+    private final LoanService loanService;
+
+    public ApplicationService(ApplicationRepository repository, ApplicationConverter applicationConverter, LoanService loanService) {
         this.repository = repository;
         this.applicationConverter = applicationConverter;
+        this.loanService = loanService;
     }
 
     @Transactional
     public ApplicationResponse createApplication(ApplicationRequest request) {
-        Application application = repository.save(applicationConverter.toApplication(request));
+        Loan loan = getLoan(request.getLoanId());
+        Application created = applicationConverter.toApplication(request);
+        created.setLoan(loan);
+        created.calculateRepaymentAmount();
+
+        Application application = repository.save(created);
+
         return applicationConverter.toResponse(application);
     }
 
     public List<ApplicationResponse> getAll() {
-        return repository.findAll().stream()
-                .map(application -> applicationConverter.toResponse(application))
-                .toList();
-    }
-
-    public List<ApplicationResponse> getApplicationsByIdUserId(Long userId) {
-        if(checkUserRecordExists(userId)) throw new RuntimeException("User record not found with id: " + userId);
-
-        return repository.findAllByUserId(userId).stream()
-                .map(applicationConverter::toResponse)
-                .toList();
+        return applicationConverter.toResponseList(repository.findAll());
     }
 
     public ApplicationResponse getApplicationById(Long id) {
@@ -57,15 +57,17 @@ public class ApplicationService {
         );
     }
 
-    private boolean checkUserRecordExists(Long userId) {
-        return repository.findAllByUserId(userId).isEmpty();
-    }
-
     @Transactional
-    public ApplicationResponse updateApplication(Application application) {
-        Application found = findApplicationById(application.getId());
+    public ApplicationResponse updateApplication(Long id, ApplicationRequest request) {
+        Loan loan = getLoan(request.getLoanId());
 
-        found.setApplicationStatus(application.getApplicationStatus());
+        Application found = findApplicationById(id);
+
+        found.setAmount(request.getAmount());
+        found.setInstallment(request.getInstallment());
+        found.setLoan(loan);
+        found.calculateRepaymentAmount();
+
         Application newApplication = repository.save(found);
 
         return applicationConverter.toResponse(newApplication);
@@ -77,5 +79,11 @@ public class ApplicationService {
 
         repository.delete(application);
         log.info("Application deleted with id: {}", id);
+    }
+
+    private Loan getLoan(Long id) {
+        Loan loan = loanService.findLoanById(id);
+        if(loan == null) throw new RuntimeException("Loan not found");
+        return loan;
     }
 }

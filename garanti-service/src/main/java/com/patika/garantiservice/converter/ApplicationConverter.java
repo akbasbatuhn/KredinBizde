@@ -14,21 +14,23 @@ import java.util.List;
 public class ApplicationConverter {
 
     public Application toApplication(ApplicationRequest request) {
-        // @formatter:off
         return Application.builder()
-                .userId(request.getUserId())
-                .createDate(LocalDateTime.now())
+                .installment(request.getInstallment())
+                .amount(request.getAmount())
+                .applicationDate(LocalDateTime.now())
                 .applicationStatus(ApplicationStatus.INITIAL)
                 .build();
-        // @formatter:on
     }
 
     public ApplicationResponse toResponse(Application application) {
         return ApplicationResponse.builder()
                 .id(application.getId())
-                .userId(application.getUserId())
-                .createDate(application.getCreateDate())
+                .applicationDate(application.getApplicationDate())
+                .amount(application.getAmount())
+                .installment(application.getInstallment())
+                .repaymentAmount(application.getRepaymentAmount())
                 .applicationStatus(application.getApplicationStatus())
+                .loanType(application.getLoan().getLoanType())
                 .build();
     }
 
