@@ -1,10 +1,13 @@
 package com.patika.garantiservice.controller;
 
+import com.patika.garantiservice.dto.request.LoanRequest;
 import com.patika.garantiservice.dto.response.LoanResponse;
 import com.patika.garantiservice.service.LoanService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -18,6 +21,11 @@ public class LoanController {
 
     public LoanController(LoanService service) {
         this.service = service;
+    }
+
+    @PostMapping
+    public ResponseEntity<LoanResponse> createLoan(@RequestBody LoanRequest request) {
+        return ResponseEntity.ok().body(service.createLoan(request));
     }
 
     @GetMapping
