@@ -18,11 +18,13 @@ public class ApplicationService implements IApplicationService {
 
     private final ApplicationRepository repository;
     private final ExternalAPIService externalAPIService;
+    private final KafkaService kafkaService;
 
 
-    public ApplicationService(ApplicationRepository repository, ExternalAPIService externalAPIService) {
+    public ApplicationService(ApplicationRepository repository, ExternalAPIService externalAPIService, KafkaService kafkaService) {
         this.repository = repository;
         this.externalAPIService = externalAPIService;
+        this.kafkaService = kafkaService;
     }
 
     @Override
@@ -33,6 +35,8 @@ public class ApplicationService implements IApplicationService {
         Application saved = repository.save(newApplication);
 
         log.info("Application saved with id: {}", saved.getId());
+
+        kafkaService.sendNotificationToKafka();
 
         return ApplicationDTOConverter.toResponseDTO(saved);
     }

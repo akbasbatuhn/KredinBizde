@@ -1,4 +1,4 @@
-package com.patika.applicationservice.configuration;
+package com.patika.notificationservice.configuration;
 
 import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.context.annotation.Bean;
@@ -7,12 +7,6 @@ import org.springframework.kafka.config.TopicBuilder;
 
 @Configuration
 public class KafkaTopicConfig {
-
-    @Bean
-    public NewTopic errorLogTopic() {
-        return TopicBuilder.name("error-log")
-                .build();
-    }
 
     @Bean
     public NewTopic notificationTopic() {
