@@ -4,6 +4,8 @@ import com.patika.errorlogservice.entity.ErrorLog;
 import com.patika.errorlogservice.repository.ErrorLogRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class LogService {
 
@@ -15,5 +17,9 @@ public class LogService {
 
     public ErrorLog save(ErrorLog errorLog) {
         return repository.save(errorLog);
+    }
+
+    public List<ErrorLog> getAll() {
+        return repository.findAll();
     }
 }
