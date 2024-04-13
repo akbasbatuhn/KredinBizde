@@ -10,6 +10,8 @@ import com.patika.bankservice.exception.ResourceNotFoundException;
 import com.patika.bankservice.repository.LoanRepository;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -33,13 +35,21 @@ public class LoanService implements ILoanService {
         if(bank == null) throw new ResourceNotFoundException(ExceptionMessages.BANK_NOT_FOUND);
 
         Loan createdLoan = LoanDTOConverter.toLoan(response, bank);
+
         Loan saved = repository.save(createdLoan);
 
-        log.info("Loan saved with id: {}", saved.getId());
+        evictCache();
 
+        log.info("Loan saved with id: {}", saved.getId());
         return LoanDTOConverter.toResponse(saved);
     }
 
+    @CacheEvict(value = "loans", allEntries = true)
+    private void evictCache() {
+        // evict cache
+    }
+
+    @Cacheable(value = "loans", key = "#id")
     @Override
     public LoanResponseDTO getLoanById(Long id) {
         return LoanDTOConverter.toResponse(findLoanById(id));

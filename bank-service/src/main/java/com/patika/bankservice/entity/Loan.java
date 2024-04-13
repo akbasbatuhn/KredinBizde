@@ -16,6 +16,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.io.Serializable;
+
 @Builder
 @Getter
 @Setter
@@ -23,7 +25,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @Entity
 @ToString
-public class Loan {
+public class Loan implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
