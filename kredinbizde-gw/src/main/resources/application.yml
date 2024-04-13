@@ -1,0 +1,38 @@
+server:
+  port: 9000
+
+spring:
+  application:
+    name: gateway-server
+  cloud:
+    gateway:
+      routes:
+        - id: USER-SERVICE
+          uri: lb://USER-SERVICE/
+          predicates:
+             - Path=/api/v1/users/**
+
+        - id: ADDRESS-SERVICE
+          uri: lb://USER-SERVICE/
+          predicates:
+            - Path=/api/v1/addresses/**
+
+        - id: application-service
+          uri: lb://APPLICATION-SERVICE/
+          predicates:
+            - Path=/api/v1/applications/**
+
+        - id: BANK-SERVICE
+          uri: lb://BANK-SERVICE/
+          predicates:
+            - Path=/api/v1/banks/**
+
+        - id: LOAN-SERVICE
+          uri: lb://BANK-SERVICE/
+          predicates:
+            - Path=/api/v1/loans/**
+
+        - id: ERROR-LOG-SERVICE
+          uri: lb://ERROR-LOG-SERVICE/
+          predicates:
+            - Path=/api/v1/errorlog/**
