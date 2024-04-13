@@ -1,7 +1,10 @@
 package com.patika.applicationservice.exception;
 
 import com.patika.applicationservice.dto.ErrorResponseDTO;
+import com.patika.applicationservice.dto.kafka.ExceptionResponse;
+import com.patika.applicationservice.service.KafkaService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -14,6 +17,9 @@ import java.time.LocalDateTime;
 @Slf4j
 public class GlobalExceptionHandler {
 
+    @Autowired
+    private KafkaService kafkaService;
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponseDTO> handleResourceNotFoundException(
             ResourceNotFoundException exception, WebRequest request) {
@@ -23,6 +29,9 @@ public class GlobalExceptionHandler {
                 .apiPath(request.getDescription(false))
                 .errorTimestamp(LocalDateTime.now())
                 .build();
+
+        kafkaService.sendExceptionResponseToKafka(
+                new ExceptionResponse(errorResponse.getApiPath(), errorResponse.getErrorCode(), errorResponse.getErrorMessage()));
 
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
@@ -36,6 +45,9 @@ public class GlobalExceptionHandler {
                 .apiPath(request.getDescription(false))
                 .errorTimestamp(LocalDateTime.now())
                 .build();
+
+        kafkaService.sendExceptionResponseToKafka(
+                new ExceptionResponse(errorResponse.getApiPath(), errorResponse.getErrorCode(), errorResponse.getErrorMessage()));
 
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
