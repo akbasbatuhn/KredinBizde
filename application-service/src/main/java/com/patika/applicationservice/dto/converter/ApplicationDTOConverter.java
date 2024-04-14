@@ -14,6 +14,8 @@ public class ApplicationDTOConverter {
                 .applicationStatus(application.getApplicationStatus())
                 .userId(application.getUserId())
                 .loanId(application.getLoanId())
+                .amount(application.getAmount())
+                .installment(application.getInstallment())
                 .id(application.getId())
                 .build();
     }

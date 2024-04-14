@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+
 @Builder
 @Getter
 @Setter
@@ -18,4 +20,6 @@ public class ApplicationResponseDTO {
     private Long loanId;
     private String userId;
     private ApplicationStatus applicationStatus;
+    private BigDecimal amount;
+    private int installment;
 }

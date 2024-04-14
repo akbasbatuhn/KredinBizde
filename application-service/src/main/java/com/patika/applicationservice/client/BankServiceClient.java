@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-@FeignClient(name = "bank-service", url = "http://localhost:8079")
+@FeignClient(name = "bank-service", url = "${bank-service.url}")
 public interface BankServiceClient {
 
     @GetMapping("/api/v1/loans/{id}")

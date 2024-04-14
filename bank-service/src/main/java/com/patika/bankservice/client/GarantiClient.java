@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 import java.util.List;
 
-@FeignClient(name = "garanti", url = "http://localhost:8091")
+@FeignClient(name = "garanti", url = "${garanti.url}")
 public interface GarantiClient {
 
     @PostMapping("/api/garanti/v1/applications")

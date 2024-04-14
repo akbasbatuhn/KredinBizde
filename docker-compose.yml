@@ -2,84 +2,385 @@ services:
 
   redis:
     image: redis
+    restart: always
     container_name: redis
     ports:
       - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - kredinbizde
 
   zookeeper:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper
+    restart: always
+    container_name: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - 2181:2181
+    healthcheck:
+      test: [ "CMD-SHELL", "echo stat | nc localhost 2181 | grep Mode" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - kredinbizde
 
   kafka:
-    image: confluentinc/cp-kafka:latest
-    depends_on:
-      - zookeeper
+    image: confluentinc/cp-kafka
+    restart: always
+    container_name: kafka
     ports:
       - 9092:9092
       - 29092:29092
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://kafka:29092
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: [ "CMD-SHELL", "nc -z localhost 9092 && echo Success || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    depends_on:
+      - zookeeper
+    networks:
+      - kredinbizde
 
-  akbank-postgres:
+  akbank-db:
     image: postgres
+    restart: always
+    container_name: akbank-db
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: password
       POSTGRES_DB: akbank
     ports:
       - "5432:5432"
+    expose:
+      - "5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d akbank -U admin"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - kredinbizde
 
-  garanti-postgres:
+  garanti-db:
     image: postgres
+    restart: always
+    container_name: garanti-db
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: password
       POSTGRES_DB: garanti
     ports:
       - "5433:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d garanti -U admin"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - kredinbizde
 
   bank-db:
     image: postgres
+    restart: always
+    container_name: bank-db
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: password
       POSTGRES_DB: bank
     ports:
       - "5434:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d bank -U admin"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - kredinbizde
 
   application-db:
     image: postgres
+    restart: always
+    container_name: application-db
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: password
       POSTGRES_DB: application
     ports:
       - "5435:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d application -U admin"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - kredinbizde
 
   user-db:
     image: mongo
     restart: always
+    container_name: user-db
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: password
     ports:
       - "27017:27017"
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh user-db:27017/user-db --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - kredinbizde
 
-  error-db:
+  error-log-db:
     image: mongo
     restart: always
+    container_name: error-log-db
     ports:
       - "27018:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: password
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh error-log-db:27017/error-db --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - kredinbizde
+
+  eureka-server:
+    image: batuhanakbas/kredinbizde-eureka-server:latest
+    restart: always
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    environment:
+      SPRING_APPLICATION_NAME: "eureka-server"
+    healthcheck:
+      test: [ "CMD-SHELL", "curl --fail --silent http://localhost:8761/actuator/health || exit 1" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    networks:
+      - kredinbizde
+
+  akbank-service:
+    image: batuhanakbas/kredinbizde-akbank-service:latest
+    restart: always
+    container_name: akbank-service
+    environment:
+      SPRING_APPLICATION_NAME: "akbank-service"
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://akbank-db:5432/akbank"
+      SPRING_DATASOURCE_USERNAME: "admin"
+      SPRING_DATASOURCE_PASSWORD: "password"
+    healthcheck:
+      test: [ "CMD-SHELL", "curl --fail --silent http://akbank-service:8090/actuator/health || exit 1" ]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 10s
+    ports:
+      - "8090:8090"
+    depends_on:
+      akbank-db:
+        condition: service_healthy
+    networks:
+      - kredinbizde
+
+  garanti-service:
+    image: batuhanakbas/kredinbizde-garanti-service:latest
+    restart: always
+    container_name: garanti-service
+    environment:
+      SPRING_APPLICATION_NAME: "garanti-service"
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://garanti-db:5432/garanti"
+      SPRING_DATASOURCE_USERNAME: "admin"
+      SPRING_DATASOURCE_PASSWORD: "password"
+    ports:
+      - "8091:8091"
+    healthcheck:
+      test: [ "CMD-SHELL", "curl --fail --silent http://garanti-service:8091/actuator/health || exit 1" ]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 5s
+    depends_on:
+      garanti-db:
+        condition: service_healthy
+    networks:
+      - kredinbizde
+
+  notification-service:
+    image: batuhanakbas/kredinbizde-notification-service:latest
+    restart: always
+    container_name: notification-service
+    environment:
+      SPRING_APPLICATION_NAME: "notification-service"
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://eurekaserver:8761/eureka/"
+      KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - kredinbizde
+
+  error-log-service:
+    image: batuhanakbas/kredinbizde-error-log-service:latest
+    restart: always
+    container_name: error-log-service
+    environment:
+      SPRING_APPLICATION_NAME: "error-log-service"
+      EUREKA_URI: "http://eureka-server:8761/eureka"
+      KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+      MONGO_URI: "mongodb://root:password@error-log-db:27017/error-db?authSource=admin"
+    healthcheck:
+      test: [ "CMD-SHELL", "curl --fail --silent http://error-log-service:8085/actuator/health || exit 1" ]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 10s
+    depends_on:
+      error-log-db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - kredinbizde
+
+  bank-service:
+    image: batuhanakbas/kredinbizde-bank-service:latest
+    restart: always
+    container_name: bank-service
+    environment:
+      SPRING_APPLICATION_NAME: "bank-service"
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://bank-db:5432/bank"
+      SPRING_DATASOURCE_USERNAME: "admin"
+      SPRING_DATASOURCE_PASSWORD: "password"
+      EUREKA_URI: "http://eureka-server:8761/eureka"
+      KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
+      REDIS_CACHE_TYPE: "redis"
+      AKBANK_URL: "http://akbank-service:8090"
+      GARANTI_URL: "http://garanti-service:8091"
+    healthcheck:
+      test: [ "CMD-SHELL", "curl --fail --silent http://bank-service:8079/actuator/health || exit 1" ]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 10s
+    depends_on:
+      redis:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      akbank-service:
+        condition: service_healthy
+      garanti-service:
+        condition: service_healthy
+      bank-db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - kredinbizde
+
+  application-service:
+    image: batuhanakbas/kredinbizde-application-service:latest
+    restart: always
+    container_name: application-service
+    environment:
+      SPRING_APPLICATION_NAME: "application-service"
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://application-db:5432/application"
+      SPRING_DATASOURCE_USERNAME: "admin"
+      SPRING_DATASOURCE_PASSWORD: "password"
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://eureka-server:8761/eureka"
+      KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+      AKBANK_URL: "http://akbank-service:8090"
+      GARANTI_URL: "http://garanti-service:8091"
+      BANK_SERVICE_URL: "http://bank-service:8079"
+    healthcheck:
+      test: [ "CMD-SHELL", "curl --fail --silent http://application-service:8081/actuator/health || exit 1" ]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 10s
+    depends_on:
+      bank-service:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - kredinbizde
+
+  user-service:
+    image: batuhanakbas/kredinbizde-user-service:latest
+    restart: always
+    container_name: user-service
+    environment:
+      SPRING_APPLICATION_NAME: "user-service"
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://eureka-server:8761/eureka"
+      KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+      MONGO_URI: "mongodb://root:password@user-db:27017/user-db?authSource=admin"
+    healthcheck:
+      test: [ "CMD-SHELL", "curl --fail --silent http://user-service:8080/actuator/health || exit 1" ]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 10s
+    depends_on:
+      user-db:
+        condition: service_healthy
+    networks:
+      - kredinbizde
+
+  gateway-server:
+    image: batuhanakbas/kredinbizde-gateway-server:latest
+    restart: always
+    container_name: gateway-server
+    environment:
+      SPRING_APPLICATION_NAME: "gateway-server"
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://eureka-server:8761/eureka/"
+
+    ports:
+      - "9000:9000"
+    depends_on:
+      user-service:
+        condition: service_healthy
+      application-service:
+        condition: service_healthy
+      bank-service:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - kredinbizde
+
+networks:
+  kredinbizde:
+    driver: bridge

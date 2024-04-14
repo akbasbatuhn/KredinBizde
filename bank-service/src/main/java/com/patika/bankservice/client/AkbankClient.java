@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 import java.util.List;
 
-@FeignClient(name = "akbank", url = "http://localhost:8090")
+@FeignClient(name = "akbank", url = "${akbank.url}")
 public interface AkbankClient {
 
     @PostMapping("/api/akbank/v1/applications")
